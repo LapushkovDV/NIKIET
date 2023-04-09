@@ -1,0 +1,98 @@
+#statusline "statgal"
+#define ComponentVersion
+
+#define CompTitle Fakel.ImportOstatki
+#doc
+  #CompTitle
+#end
+
+//#include SHK_VIP.vil
+
+#include GalNet.inc
+
+#include GloConst.inc
+#include KauConst.inc
+
+#include GALNET.CCM
+#include Money.ccm
+#include GALNET.CSC
+#include ExcelFormat.inc
+#include FldColor.inc
+#include MnPlan.inc
+#include RegConst.inc
+#include Tunes.inc
+#include CommonC.inc
+#include CompConst.inc
+#include BuhConst.inc
+#include Excel.inc
+#include KatDoc.inc
+#include NalogReg.inc
+#include DocRef.inc
+#include Reports.inc
+#include Oper.inc
+#include NalTunes.inc
+#include ofpconst.inc
+#include MBPConst.inc
+#include fpConst.inc
+#include KutConst.inc
+#include GalNet.cad
+#include Mark.inc
+#include coConst.inc   // глобальные константы таблиц словаря
+#include cfg_all.inc   // константы для использования конфигуратора
+#include cfg_err.inc
+#include pick.inc
+#include TEP.CSC
+end;
+#include MBPCommn.inc
+end;
+#include SaldoMtr.inc // Для расчета сальдо по складу в разрезе целевого учета
+#include GloTypes.inc
+#include GloFuncs.inc
+#include PrnSoprMem.inc
+#include PrnSopr.inc
+
+#include ValFunc.Vih
+#include MTRFuncs.vih
+//--------------------
+#include oEdIzm.var        // fEdIzm - объект для работы с единицами измерения
+#include ValFunc.Var
+#include TMnPlan.vih
+#include OBJINTPL.VIN
+
+
+
+
+//#include Tabmem.tbl
+//#include TMnPlan.vih
+
+//#include OBJINTPL.VIN
+//******************************************
+#include GetKau.vih
+#include Query.vih
+//----------------------------------
+
+#params
+[vip]
+LicenseControlInclude=""
+#end
+
+
+const
+// coAN_RezerveRefDoc  = 'Резерв. Тип исходного документа';
+end;
+#include Extattr.vih
+#include Extattr.var
+#include Notes.vih
+#include Notes.var
+
+#include F_GetP.vih
+#include statlog.vih
+#include StatLog.var          // oStatLog       работа со статусами документов
+#include Notes.var            // oNotes         пояснения к статусу
+#include marker.vih
+
+#component "NIKIET"
+
+
+#make "Source\Algoritm_checkKAU_Setup.vip"
+#make "Source\Algoritm_checkKAU.vip"

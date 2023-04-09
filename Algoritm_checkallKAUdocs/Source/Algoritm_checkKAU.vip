@@ -1,0 +1,116 @@
+/*************************************************************************************************\
+  Наименование:
+  Контур/Модуль:
+  Примечание:
+  Вид работы  |Номер           |Дата    |Исполнитель              |Проект
+  -----------------------------------------------------------------------------------------------
+\*************************************************************************************************/
+/*
+*/
+
+#include Algor.vih
+#include StatLog.vih
+
+#component "M_MnPlan"
+
+//#include SaldoFuncs.vih
+
+//***********************************
+VipInterface Algoritm_checkallKAUdocs Implements oAlgoritm_Sys;
+//***********************************
+#doc
+Алгоритм для прикрепления файлов
+#end
+
+Interface Algoritm_checkallKAUdocs;
+//***********************************
+
+Var
+ _TypeCpNrec : word;
+ _cpNrec     : comp;
+Create view
+Var
+ nrecFormPl    : Comp;//Настройка алгоритма
+As Select
+ FormPl.nrec
+From
+   FormPl
+ , SpFormPl
+ , saldtune
+
+Where
+((
+               nrecFormPl == FormPl.NRec
+    and FormPl.RESCOMP[1] == saldtune.nrec
+          and FormPl.NRec == spFormPl.cFormPl
+))
+;
+//-------------------------
+//Номер системного алгоритма
+Function GetNum: Word;
+{ Result := 6103;
+} //Function GetNum: Word;
+
+
+//-------------------------
+Function GetName: String;
+{ Result := 'Проверка всех КАУ ЦУ документа';
+}; //Function GetName: String;
+
+
+//-------------------------
+Function GetMemo(st: oSteckCommonString): Boolean;
+{ Result := True;
+  st.Push(GetName);
+  st.Push(' Алгоритм может использоваться к документам из таблиц katsopr spsopr');
+  st.Push(' Проход будет по specmtr к katsopr и spsopr (ЦУ в позициях накладных/актов)');
+  st.Push(' Алгоритм должен запускать перед формированием ордеров');
+  st.Push(' ');
+  st.Push(' Выбирается объект ЦУ и значения его аналитики для разрешения и/или запрета (запрет имеет приоритет)');
+
+
+
+}; //Function GetMemo(st: oSteckCommonString): Boolean;
+
+
+//-------------------------
+Function GetNameInter: String;
+{ Result := 'Algoritm_checkallKAUdocs';
+} //Function GetNameInter: String;
+
+
+//-------------------------
+Function GetNameInterPr: String;
+{ Result := 'Algoritm_checkallKAUdocs_Setup';
+} //Function GetNameInterPr: String;
+
+
+//-------------------------
+Function InitInter(Var pt: TRecAcc): Boolean;
+{ #__UNUSED__(pt)
+  Result := True;
+} //Function InitInter(Var pt: TRecAcc): Boolean;
+
+
+
+//Запуск алгоритма
+Function RunInter(wflag: Word; Var pt: TRecAcc): Boolean;
+{ #__UNUSED__(wflag,pt)
+
+  Result  := false;
+
+  set nrecFormPl := pt.cFormPl;
+  if getfirst FormPl <> tsOK {
+     message('Не найдена настройка алгоритма ' + string(nrecFormPl,0,0), error);
+     pt.Binding:=8;
+     result := false;
+     exit;
+   }
+
+  _TypeCpNrec := pt.TypeCpNrec;
+  _cpNrec     := pt.cpNrec;
+
+ result := True;
+} //Function RunInter(wflag: Word; Var pt: TRecAcc): Boolean;
+
+End.

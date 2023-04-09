@@ -1,0 +1,20 @@
+#include MakeMove.vih
+
+#ifndef __GP_MakeMove_VIH__
+#define __GP_MakeMove_VIH__
+
+#component "GP_Logistics"
+
+ObjInterface GP_ObjMakeMove;
+
+public procedure ControlSaldoSpSopr_PostProcess;
+
+Public Function MakeMoveForESB(cKatSopr : comp; wDefine, SkPr, wDel, wDate, wTXO, wMode, wParam, wOrder : word; w_dOpr : date) : boolean;
+
+Public Function AnySpOrderUpdateESB(pSpOrder, pNewParty: comp): boolean; 
+
+end;
+
+VipInterface GP_MakeMove(MakeMove) implements GP_ObjMakeMove;
+
+#endif
