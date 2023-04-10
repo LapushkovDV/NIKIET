@@ -21,19 +21,20 @@
 VipInterface Algoritm_checkallKAUdocs_Setup Implements oAlgoritmSetup;
 Interface Algoritm_checkallKAUdocs_Setup 'Алгоритм проверки КАУ  для запрета/разрешения списания', EscClose, Blue;
 
+function getstrkau(_npp : word) : string; forward;
 Create view
 var nrecFormPl : comp;
 select
-   if(SaldTune.WOBJ = 0   , '-', ShowKau(SaldTune.WOBJ   , spFormPl.RESCOMP1[1]  )) (Fieldname =vKau1 )
- , if(SaldTune.WKAU[1] = 0, '-', ShowKau(SaldTune.WKAU[1], spFormPl.RESCOMP1[2]  )) (Fieldname =vKau2 )
- , if(SaldTune.WKAU[2] = 0, '-', ShowKau(SaldTune.WKAU[2], spFormPl.RESCOMP1[3]  )) (Fieldname =vKau3 )
- , if(SaldTune.WKAU[3] = 0, '-', ShowKau(SaldTune.WKAU[3], spFormPl.RESCOMP1[4]  )) (Fieldname =vKau4 )
- , if(SaldTune.WKAU[4] = 0, '-', ShowKau(SaldTune.WKAU[4], spFormPl.RESCOMP1[5]  )) (Fieldname =vKau5 )
- , if(SaldTune.WKAU[5] = 0, '-', ShowKau(SaldTune.WKAU[5], spFormPl.RESCOMP1[6]  )) (Fieldname =vKau6 )
- , if(SaldTune.WKAU[6] = 0, '-', ShowKau(SaldTune.WKAU[6], spFormPl.RESCOMP1[7]  )) (Fieldname =vKau7 )
- , if(SaldTune.WKAU[7] = 0, '-', ShowKau(SaldTune.WKAU[7], spFormPl.RESCOMP1[8]  )) (Fieldname =vKau8 )
- , if(SaldTune.WKAU[8] = 0, '-', ShowKau(SaldTune.WKAU[8], spFormPl.RESCOMP1[9]  )) (Fieldname =vKau9 )
- , if(SaldTune.WKAU[9] = 0, '-', ShowKau(SaldTune.WKAU[9], spFormPl.RESCOMP1[10] )) (Fieldname =vKau10 )
+   getstrkau(1)  (Fieldname =vKau1 )
+ , getstrkau(2)  (Fieldname =vKau2 )
+ , getstrkau(3)  (Fieldname =vKau3 )
+ , getstrkau(4)  (Fieldname =vKau4 )
+ , getstrkau(5)  (Fieldname =vKau5 )
+ , getstrkau(6)  (Fieldname =vKau6 )
+ , getstrkau(7)  (Fieldname =vKau7 )
+ , getstrkau(8)  (Fieldname =vKau8 )
+ , getstrkau(9)  (Fieldname =vKau9 )
+ , getstrkau(10) (Fieldname =vKau10 )
 from
    FormPl
  , SpFormPl
@@ -41,11 +42,34 @@ from
 Where
 ((
                 nrecFormPl  == FormPl.NRec
-      and FormPl.RESCOMP[1] == saldtune.nrec
             and FormPl.NRec == spFormPl.cFormPl
+      and spFormPl.RESCOMP2[1] == saldtune.nrec
 ))
 ;
 parameters nrecFormPl;
+function getkausaldtune(_nppkau : word) : word;
+{
+  result := 1;
+  if _nppkau > 1 then result := _nppkau - 1
+}
+
+function getstrkau(_npp : word) : string;
+{
+ if _npp = 1 {
+  result := if(SaldTune.Wobj = 0 ,'-'
+             ,if(spFormPl.RESWORD1[_npp] = 0, '< Не проверять >'
+               ,if(spFormPl.RESWORD1[_npp] = 1, '< Заполнен >'
+                 , if(spFormPl.RESWORD1[_npp] = 2, '< Не заполнен >'
+                   , if(spFormPl.RESWORD1[_npp] = 3,'< Явно - ' + ShowKau(SaldTune.Wobj, spFormPl.RESCOMP1[_npp]) + '>','???')))))
+  }
+  else {
+  result := if(SaldTune.WKAU[getkausaldtune(_npp)] = 0 ,'-'
+              ,if(spFormPl.RESWORD1[_npp] = 0, '< Не проверять >'
+                 ,if(spFormPl.RESWORD1[_npp] = 1, '< Заполнен >'
+                    , if(spFormPl.RESWORD1[_npp] = 2, '< Не заполнен >'
+                       , if(spFormPl.RESWORD1[_npp] = 3, '< Явно - ' + ShowKau(SaldTune.WKAU[getkausaldtune(_npp)], spFormPl.RESCOMP1[_npp]) + '>','???')))))
+  }
+}
 
 screen scMain ;
   show at (,,, 5);
@@ -60,34 +84,65 @@ fields
 .@@@@@@@@@@@@@@ формирование ордеров если в документе будет комбинации КАУ, не указанная ниже
 >>
 end;
+
+#declare setbkcolor(nppkau)
+{Font = {backcolor = if(#nppkau = 1
+     ,if(spFormPl.RESCOMP1[#nppkau] = 0h  and spFormPl.RESWORD1[#nppkau] = 3 , colorneed
+       ,if(SaldTune.wobj <> 0, 0,ColorSysGray)
+       )
+     ,if(spFormPl.RESCOMP1[#nppkau] = 0h  and spFormPl.RESWORD1[#nppkau]= 3 , colorneed
+        ,if(SaldTune.WKAU[getkausaldtune(#nppkau)] <> 0,0, ColorSysGray)
+        )
+);}}
+#end
+
 browse brspec;
   show at (,6,, );
  table spFormPl;
  fields
-  spFormPl.RESWORD2[1]  'Расположение','ЦУ'  : [list 0 'Шапка', 1 'Спецификация'] , protect;
-  Saldtune.name         'Объект','ЦУ'   : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP2[1] = 0h, colorneed,0);}};
-  spFormPl.RESWORD1[1]  'КАУ1','режим'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau1                 'КАУ1' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[1] = 0h  and SaldTune.WOBJ <> 0  , colorneed,0);}};
-  spFormPl.RESWORD1[2]  'КАУ2'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau2                 'КАУ2' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[2] = 0h  and SaldTune.WKAU[1] <> 0, colorneed,0);}};
-  spFormPl.RESWORD1[3]  'КАУ3'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau3                 'КАУ3' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[3] = 0h  and SaldTune.WKAU[2] <> 0, colorneed,0);}};
-  spFormPl.RESWORD1[4]  'КАУ4'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau4                 'КАУ4' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[4] = 0h  and SaldTune.WKAU[3] <> 0, colorneed,0);}};
-  spFormPl.RESWORD1[5]  'КАУ5'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau5                 'КАУ5' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[5] = 0h  and SaldTune.WKAU[4] <> 0, colorneed,0);}};
-  spFormPl.RESWORD1[6]  'КАУ6'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau6                 'КАУ6' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[6] = 0h  and SaldTune.WKAU[5] <> 0, colorneed,0);}};
-  spFormPl.RESWORD1[7]  'КАУ7'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau7                 'КАУ7' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[7] = 0h  and SaldTune.WKAU[6] <> 0, colorneed,0);}};
-  spFormPl.RESWORD1[8]  'КАУ8'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau8                 'КАУ8' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[8] = 0h  and SaldTune.WKAU[7] <> 0, colorneed,0);}};
-  spFormPl.RESWORD1[9]  'КАУ9'  : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau9                 'КАУ9' ,'значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[9] = 0h  and SaldTune.WKAU[8] <> 0, colorneed,0);}};
-  spFormPl.RESWORD1[10] 'КАУ10' : [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
-  vKau10                'КАУ10','значение' : Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP1[10] = 0h and SaldTune.WKAU[9] <> 0, colorneed,0);}};
-  spFormPl.RESWORD2[2]  'Формирование','ордеров' : [list 0 'Запрещать', 1 'Разрешать'], protect;
+  spFormPl.RESWORD2[1]  'Расположение','ЦУ'  :[7], [list 0 'Шапка', 1 'Спецификация'] , protect;
+  Saldtune.name         'Объект','ЦУ'   :[7], Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP2[1] = 0h, colorneed,0);}};
+//  spFormPl.RESWORD1[1]  'КАУ1','режим'  :[7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau1                 'КАУ1' ,'значение' :[7], Protect, pickbutton, #setbkcolor(1);
+//  spFormPl.RESWORD1[2]  'КАУ2'  :[7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau2                 'КАУ2' ,'значение' : [7],Protect, pickbutton, #setbkcolor(2);
+//  spFormPl.RESWORD1[3]  'КАУ3'  :[7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau3                 'КАУ3' ,'значение' :[7],  Protect, pickbutton, #setbkcolor(3);
+//  spFormPl.RESWORD1[4]  'КАУ4'  : [7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau4                 'КАУ4' ,'значение' :[7],  Protect, pickbutton, #setbkcolor(4);
+//  spFormPl.RESWORD1[5]  'КАУ5'  : [7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau5                 'КАУ5' ,'значение' : [7], Protect, pickbutton, #setbkcolor(5);
+//  spFormPl.RESWORD1[6]  'КАУ6'  : [7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau6                 'КАУ6' ,'значение' :[7],  Protect, pickbutton, #setbkcolor(6);
+//  spFormPl.RESWORD1[7]  'КАУ7'  : [7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau7                 'КАУ7' ,'значение' : [7], Protect, pickbutton, #setbkcolor(7);
+//  spFormPl.RESWORD1[8]  'КАУ8'  : [7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau8                 'КАУ8' ,'значение' :[7],  Protect, pickbutton, #setbkcolor(8);
+//  spFormPl.RESWORD1[9]  'КАУ9'  : [7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau9                 'КАУ9' ,'значение' :[7],  Protect, pickbutton, #setbkcolor(9);
+//  spFormPl.RESWORD1[10] 'КАУ10' : [7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
+    vKau10                'КАУ10','значение' : [7], Protect, pickbutton, #setbkcolor(10);
+  spFormPl.RESWORD2[2]  'Формирование','ордеров' : [7], [list 0 'Запрещать', 1 'Разрешать'], protect;
 end;
+TableEvent table spFormPl;
+cmSetDefault: {
+}
+cmInsertRecord:
+{
+  Insert Current spFormPl;
+}
+cmUpdateRecord:
+{
+  Update Current spFormPl;
+}
+cmDeleteRecord:
+{
+ if message('Удалить запись?',YesNo)<>cmYes
+  { abort; exit;
+  }
+  delete Current spFormPl;
+}
+end; //TableEvent table #table
 
 
 
@@ -132,9 +187,180 @@ cminit: {
      insert current spFormPl;
    }
 }
+cmpick: {
+  case curfield of
+    #Saldtune.name : {
+     if RunInterface('L_SaldoMtr::GetSaldTune',spFormPl.RESCOMP2[1],word(0)) <> cmCancel
+      {
+       set spFormPl.RESCOMP2[1]  := spFormPl.RESCOMP2[1];
+       set spFormPl.RESCOMP1[2]  := 0h;
+       set spFormPl.RESCOMP1[3]  := 0h;
+       set spFormPl.RESCOMP1[4]  := 0h;
+       set spFormPl.RESCOMP1[5]  := 0h;
+       set spFormPl.RESCOMP1[6]  := 0h;
+       set spFormPl.RESCOMP1[7]  := 0h;
+       set spFormPl.RESCOMP1[8]  := 0h;
+       set spFormPl.RESCOMP1[9]  := 0h;
+       set spFormPl.RESCOMP1[10] := 0h;
+       set spFormPl.RESWORD1[1]  := 0;
+       set spFormPl.RESWORD1[2]  := 0;
+       set spFormPl.RESWORD1[3]  := 0;
+       set spFormPl.RESWORD1[4]  := 0;
+       set spFormPl.RESWORD1[5]  := 0;
+       set spFormPl.RESWORD1[6]  := 0;
+       set spFormPl.RESWORD1[7]  := 0;
+       set spFormPl.RESWORD1[8]  := 0;
+       set spFormPl.RESWORD1[9]  := 0;
+       set spFormPl.RESWORD1[10] := 0;
+      };
+      updatetable;
+     }
+#declare selectkau(nppkau)
+      if isvalidall(tnSaldTune)
+      if #nppkau = 1 {
+         if spFormPl.RESWORD1[#nppkau] = 3 // стоит режим = конкретное значение
+          if SaldTune.WOBJ <> 0 {
+            if iGetkau.GetCodeKau(cgiPickKau, SaldTune.WOBJ, SpFormPl.ResComp1[#nppkau]) <> 0 {
+              Set SpFormPl.ResComp1[#nppkau] := SpFormPl.ResComp1[#nppkau];
+            }
+          }
+       }
+       else {
+         if spFormPl.RESWORD1[#nppkau] = 3 // стоит режим = конкретное значение
+          if SaldTune.WOBJ <> 0 {
+            if iGetkau.GetCodeKau(cgiPickKau, SaldTune.wkau[getkausaldtune(#nppkau)], SpFormPl.ResComp1[#nppkau]) <> 0 {
+              Set SpFormPl.ResComp1[#nppkau] := SpFormPl.ResComp1[#nppkau];
+            }
+          }
+       }
+     UpdateTable;
+#end
+#declare showmenu (nppkau)
+ {
+  if isvalidall(tnSaldTune)
+   if #nppkau = 1 {
+       if saldtune.wobj <> 0 then PutHotCommand(RunMenu('mnucheckallkaudocalgorithm'))
+     }
+     else {
+       if saldtune.wkau[getkausaldtune(#nppkau)] <> 0 then PutHotCommand(RunMenu('mnucheckallkaudocalgorithm'))
+     }
+ }
+#end
+     #vKau1 : #showmenu(1)
+     #vKau2 : #showmenu(2)
+     #vKau3 : #showmenu(3)
+     #vKau4 : #showmenu(4)
+     #vKau5 : #showmenu(5)
+     #vKau6 : #showmenu(6)
+     #vKau7 : #showmenu(7)
+     #vKau8 : #showmenu(8)
+     #vKau9 : #showmenu(9)
+     #vKau10: #showmenu(10)
+
+  end;
+  rereadrecord;
+}
 cmcheckfield: {
-  message('cmcheckfield');
   updatetable;
 }
+cmValue1: {
+  case curfield of
+   #vKau1 : set spFormPl.RESWORD1[1]  := 0;
+   #vKau2 : set spFormPl.RESWORD1[2]  := 0;
+   #vKau3 : set spFormPl.RESWORD1[3]  := 0;
+   #vKau4 : set spFormPl.RESWORD1[4]  := 0;
+   #vKau5 : set spFormPl.RESWORD1[5]  := 0;
+   #vKau6 : set spFormPl.RESWORD1[6]  := 0;
+   #vKau7 : set spFormPl.RESWORD1[7]  := 0;
+   #vKau8 : set spFormPl.RESWORD1[8]  := 0;
+   #vKau9 : set spFormPl.RESWORD1[9]  := 0;
+   #vKau10: set spFormPl.RESWORD1[10] := 0;
+  end;
+ updatetable;
+}
+cmValue2: {
+  case curfield of
+   #vKau1 : set spFormPl.RESWORD1[1]  := 1;
+   #vKau2 : set spFormPl.RESWORD1[2]  := 1;
+   #vKau3 : set spFormPl.RESWORD1[3]  := 1;
+   #vKau4 : set spFormPl.RESWORD1[4]  := 1;
+   #vKau5 : set spFormPl.RESWORD1[5]  := 1;
+   #vKau6 : set spFormPl.RESWORD1[6]  := 1;
+   #vKau7 : set spFormPl.RESWORD1[7]  := 1;
+   #vKau8 : set spFormPl.RESWORD1[8]  := 1;
+   #vKau9 : set spFormPl.RESWORD1[9]  := 1;
+   #vKau10: set spFormPl.RESWORD1[10] := 1;
+  end;
+ updatetable;
+}
+cmValue3: {
+  case curfield of
+   #vKau1 : set spFormPl.RESWORD1[1]  := 2;
+   #vKau2 : set spFormPl.RESWORD1[2]  := 2;
+   #vKau3 : set spFormPl.RESWORD1[3]  := 2;
+   #vKau4 : set spFormPl.RESWORD1[4]  := 2;
+   #vKau5 : set spFormPl.RESWORD1[5]  := 2;
+   #vKau6 : set spFormPl.RESWORD1[6]  := 2;
+   #vKau7 : set spFormPl.RESWORD1[7]  := 2;
+   #vKau8 : set spFormPl.RESWORD1[8]  := 2;
+   #vKau9 : set spFormPl.RESWORD1[9]  := 2;
+   #vKau10: set spFormPl.RESWORD1[10] := 2;
+  end;
+ updatetable;
+}
+cmValue4: {
+  case curfield of
+   #vKau1 : {
+       set spFormPl.RESWORD1[1]  := 3;
+       #selectkau(1)
+      }
+   #vKau2 : {
+       set spFormPl.RESWORD1[2]  := 3;
+       #selectkau(2)
+      }
+   #vKau3 : {
+       set spFormPl.RESWORD1[3]  := 3;
+       #selectkau(3)
+      }
+   #vKau4 : {
+       set spFormPl.RESWORD1[4]  := 3;
+       #selectkau(4)
+      }
+   #vKau5 : {
+       set spFormPl.RESWORD1[5]  := 3;
+       #selectkau(5)
+      }
+   #vKau6 : {
+       set spFormPl.RESWORD1[6]  := 3;
+       #selectkau(6)
+      }
+   #vKau7 : {
+       set spFormPl.RESWORD1[7]  := 3;
+       #selectkau(7)
+      }
+   #vKau8 : {
+       set spFormPl.RESWORD1[8]  := 3;
+       #selectkau(8)
+      }
+   #vKau9 : {
+       set spFormPl.RESWORD1[9]  := 3;
+       #selectkau(9)
+      }
+   #vKau10: {
+       set spFormPl.RESWORD1[10]  := 3;
+       #selectkau(10)
+      }
+  end;
+ updatetable;
+}
+
 end;
 End.
+
+mnucheckallkaudocalgorithm menu
+{
+ - 'Не проверять'        , cmValue1;
+ - 'Заполнен'            , cmValue2;
+ - 'Не заполнен'         , cmValue3;
+ - 'Конкретное значение' , cmValue4;
+}

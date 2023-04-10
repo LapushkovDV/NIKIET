@@ -90,7 +90,7 @@ end;
 #include StatLog.var          // oStatLog       работа со статусами документов
 #include Notes.var            // oNotes         пояснения к статусу
 #include marker.vih
-
+var iGetkau:GetKau;
 #component "NIKIET"
 
 

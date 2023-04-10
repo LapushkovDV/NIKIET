@@ -83,10 +83,13 @@
 			</ConfigurationList>
 		</DatabaseConfiguration>
 		<FileList>
-			<File Name="Algoritm_checkallKAUdocs.prj" PosX="1" PosY="1" OpenEditor="True"/>
-			<File Name="Source\Algoritm_checkKAU_Setup.vip" PosX="24" PosY="136" OpenEditor="True" Active="True"/>
-			<File Name="..\..\..\..\Users\Дмитрий\YandexDisk\Work\Энергомаш\EM_SVN\EM_Ostatki\Source\ReportOstatki.vip" PosX="1" PosY="108" OpenEditor="True"/>
+			<File Name="Algoritm_checkallKAUdocs.prj" PosX="18" PosY="20" OpenEditor="True"/>
+			<File Name="Source\Algoritm_checkKAU_Setup.vip" PosX="11" PosY="245" OpenEditor="True" Active="True"/>
+			<File Name="..\..\..\..\Users\Дмитрий\YandexDisk\Work\Энергомаш\EM_SVN\EM_Ostatki\Source\ReportOstatki.vip" PosX="32" PosY="968" OpenEditor="True"/>
 			<File Name="Source\Algoritm_checkKAU.vip" PosX="72" PosY="29" OpenEditor="True"/>
+			<File Name="..\..\..\GAL\Frm\Inc\GLOCONST.INC" PosX="1" PosY="1" OpenEditor="True"/>
+			<File Name="..\..\..\GAL\Frm\CompSrc\F\F_GetAn\Vip\Getkau.vih" PosX="20" PosY="103" OpenEditor="True"/>
+			<File Name="..\..\..\GAL\Frm\Inc\fldcolor.inc" PosX="15" PosY="29" OpenEditor="True"/>
 		</FileList>
 		<DebugOptions StopOnStartup="False"/>
 		<MarkerList>
@@ -135,15 +138,15 @@
 			<BreakPoint FileName="Source\shk_barcodeFunc.vip" Line="212"/>
 		</BreakPointList>
 		<CompileMessengerList>
-			<CompileMessenger Name="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\Algoritm_checkallKAUdocs.prj" DateTimeStart="45025,9342899653" DateTimeCompile="5,03125047544017E-5" StateHistory="False">
+			<CompileMessenger Name="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\Algoritm_checkallKAUdocs.prj" DateTimeStart="45026,3888114468" DateTimeCompile="5,42939815204591E-5" StateHistory="False">
 				<CompileMessageList>
-					<CompileMessage MessageType="mtInfo" MessageText="Компиляция ведется без файла контроля лицензий!" SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="50" SourceColumn="1"/>
-					<CompileMessage MessageType="mtInfo" MessageText="В функции(процедуре) - RunInter входящий параметр: wflag:Word не используется." SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="106" SourceColumn="1"/>
-					<CompileMessage MessageType="mtInfo" MessageText="В функции(процедуре) - m_ALGORITM_CHECKALLKAUDOCS_SETUP_oAlgoritmSetup_asInitInter входящий параметр: p_cFormPl:Comp не используется." SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="111" SourceColumn="1"/>
-					<CompileMessage MessageType="mtWarning" MessageText="При формальном описании интерфейса M_MNPLAN::ALGORITM_CHECKALLKAUDOCS_SETUP пропущено описание параметров" SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="139" SourceColumn="5"/>
-					<CompileMessage MessageType="mtInfo" MessageText="Метод интерфейса &quot;ALGORITM_CHECKALLKAUDOCS_SETUP.RunInter&quot;, объявленный в C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip(94), не был использован" SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="139" SourceColumn="5"/>
-					<CompileMessage MessageType="mtInfo" MessageText="Компиляция ведется без файла контроля лицензий!" SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU.vip" SourceLine="50" SourceColumn="1"/>
-					<CompileMessage MessageType="mtEndCompile" MessageText="09.04.2023 22:25:27"/>
+					<CompileMessage MessageType="mtInfo" MessageText="Компиляция ведется без файла контроля лицензий!" SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="24" SourceColumn="1"/>
+					<CompileMessage MessageType="mtInfo" MessageText="В функции(процедуре) - RunInter входящий параметр: wflag:Word не используется." SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="161" SourceColumn="1"/>
+					<CompileMessage MessageType="mtInfo" MessageText="В функции(процедуре) - m_ALGORITM_CHECKALLKAUDOCS_SETUP_oAlgoritmSetup_asInitInter входящий параметр: p_cFormPl:Comp не используется." SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="166" SourceColumn="1"/>
+					<CompileMessage MessageType="mtWarning" MessageText="Данный оператор, скорее всего, не имеет смысла (возможно, вместо := поставлено =)" SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="249" SourceColumn="53"/>
+					<CompileMessage MessageType="mtWarning" MessageText="Ожидалось: &quot;;&quot;" SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="249" SourceColumn="53"/>
+					<CompileMessage MessageType="mtError" MessageText="Нет такой функции, поля или метода : THEN" SourceFileName="C:\Galaktika\_git\NIKIET\Algoritm_checkallKAUdocs\SOURCE\Algoritm_checkKAU_Setup.vip" SourceLine="249" SourceColumn="58"/>
+					<CompileMessage MessageType="mtEndCompile" MessageText="10.04.2023 9:19:58"/>
 				</CompileMessageList>
 			</CompileMessenger>
 		</CompileMessengerList>
