@@ -1,0 +1,22 @@
+
+function getkausaldtune(_nppkau : word) : word;
+{
+  result := 1;
+  if _nppkau > 1 then result := _nppkau - 1
+}
+
+function isallNotCheck : boolean; // проверяем, что по всем КАУ стоит не проверять - а это ошибка
+{
+  result := False;
+  if     ((SaldTune.wobj    = 0) or (SaldTune.wobj    <> 0 and spFormPl.RESWORD1[1]   = 0 )) //_notCheckKau1 := true
+     and ((SaldTune.WKAU[1] = 0) or (SaldTune.WKAU[1] <> 0 and spFormPl.RESWORD1[2]   = 0 ))
+     and ((SaldTune.WKAU[2] = 0) or (SaldTune.WKAU[2] <> 0 and spFormPl.RESWORD1[3]   = 0 ))
+     and ((SaldTune.WKAU[3] = 0) or (SaldTune.WKAU[3] <> 0 and spFormPl.RESWORD1[4]   = 0 ))
+     and ((SaldTune.WKAU[4] = 0) or (SaldTune.WKAU[4] <> 0 and spFormPl.RESWORD1[5]   = 0 ))
+     and ((SaldTune.WKAU[5] = 0) or (SaldTune.WKAU[5] <> 0 and spFormPl.RESWORD1[6]   = 0 ))
+     and ((SaldTune.WKAU[6] = 0) or (SaldTune.WKAU[6] <> 0 and spFormPl.RESWORD1[7]   = 0 ))
+     and ((SaldTune.WKAU[7] = 0) or (SaldTune.WKAU[7] <> 0 and spFormPl.RESWORD1[8]   = 0 ))
+     and ((SaldTune.WKAU[8] = 0) or (SaldTune.WKAU[8] <> 0 and spFormPl.RESWORD1[9]   = 0 ))
+     and ((SaldTune.WKAU[9] = 0) or (SaldTune.WKAU[9] <> 0 and spFormPl.RESWORD1[10]  = 0 ))
+    then result := True;
+}              

@@ -78,7 +78,17 @@ LicenseControlInclude=""
 
 
 const
-// coAN_RezerveRefDoc  = 'Резерв. Тип исходного документа';
+  co_head = 0;
+  co_spec = 1;
+  co_denied   = 1; //запрещать формирование ордеров
+  co_accepted = 0; // разрешать формирование ордеров
+
+  co_doNotCheckKau = 0; // 0, '< Не проверять >'
+  co_FillKau       = 1; // '< Заполнен >'
+  co_dontFillKau   = 2; //  '< Не заполнен >'
+  co_clearlyKAU    = 3; //< Явно - '
+
+
 end;
 #include Extattr.vih
 #include Extattr.var

@@ -47,34 +47,31 @@ Where
 ))
 ;
 parameters nrecFormPl;
-function getkausaldtune(_nppkau : word) : word;
-{
-  result := 1;
-  if _nppkau > 1 then result := _nppkau - 1
-}
+#include Algoritm_checkKAU_functions.vpp
 
 function getstrkau(_npp : word) : string;
 {
  if _npp = 1 {
   result := if(SaldTune.Wobj = 0 ,'-'
-             ,if(spFormPl.RESWORD1[_npp] = 0, '< Не проверять >'
-               ,if(spFormPl.RESWORD1[_npp] = 1, '< Заполнен >'
-                 , if(spFormPl.RESWORD1[_npp] = 2, '< Не заполнен >'
-                   , if(spFormPl.RESWORD1[_npp] = 3,'< Явно - ' + ShowKau(SaldTune.Wobj, spFormPl.RESCOMP1[_npp]) + '>','???')))))
+             ,if(spFormPl.RESWORD1[_npp] = co_doNotCheckKau, '< Не проверять >' // 0
+               ,if(spFormPl.RESWORD1[_npp] = co_FillKau, '< Заполнен >' // 1
+                 , if(spFormPl.RESWORD1[_npp] = co_dontFillKau, '< Не заполнен >' //2
+                   , if(spFormPl.RESWORD1[_npp] = co_clearlyKAU,'< Явно - ' + ShowKau(SaldTune.Wobj, spFormPl.RESCOMP1[_npp]) + '>','???'))))) //3
   }
   else {
   result := if(SaldTune.WKAU[getkausaldtune(_npp)] = 0 ,'-'
-              ,if(spFormPl.RESWORD1[_npp] = 0, '< Не проверять >'
-                 ,if(spFormPl.RESWORD1[_npp] = 1, '< Заполнен >'
-                    , if(spFormPl.RESWORD1[_npp] = 2, '< Не заполнен >'
-                       , if(spFormPl.RESWORD1[_npp] = 3, '< Явно - ' + ShowKau(SaldTune.WKAU[getkausaldtune(_npp)], spFormPl.RESCOMP1[_npp]) + '>','???')))))
+              ,if(spFormPl.RESWORD1[_npp] = co_doNotCheckKau, '< Не проверять >'
+                 ,if(spFormPl.RESWORD1[_npp] = co_FillKau, '< Заполнен >'
+                    , if(spFormPl.RESWORD1[_npp] = co_dontFillKau, '< Не заполнен >'
+                       , if(spFormPl.RESWORD1[_npp] = co_clearlyKAU, '< Явно - ' + ShowKau(SaldTune.WKAU[getkausaldtune(_npp)], spFormPl.RESCOMP1[_npp]) + '>','???')))))
   }
 }
 
 screen scMain ;
   show at (,,, 5);
 fields
- FormPl.RESWORD[1] : [list 0 'Запрещать', 1 'Разрешать'], protect;
+ FormPl.RESWORD[1] : [list 0 'Разрешать', 1 'Запрещать'], protect;
+ FormPl.RESWORD[2] : Noprotect;
 <<'Настройки алгоритма проверки КАУ в документе'
 Алгоритм может использоваться к документам из таблиц katsopr spsopr
 Проход будет по specmtr к katsopr и spsopr (ЦУ в позициях накладных/актов)
@@ -82,18 +79,25 @@ fields
 
 Ниже выбирается объект ЦУ и значения его аналитики для разрешения и/или запрета (запрет имеет приоритет)
 .@@@@@@@@@@@@@@ формирование ордеров если в документе будет комбинации КАУ, не указанная ниже
+ [.] - вести лог (в рабочей папке файл вида Algoritm_checkallKAUdocs_YYYYMMDD_HHMMSS.log)`
+Если не надо проверять ЦУ в "шапке", то строку с "шапкой" не надо заносить
+Условие, когда по всем КАУ стоит "Не проверять" является ошибочным и не будет обрабатываться
 >>
 end;
 
 #declare setbkcolor(nppkau)
-{Font = {backcolor = if(#nppkau = 1
-     ,if(spFormPl.RESCOMP1[#nppkau] = 0h  and spFormPl.RESWORD1[#nppkau] = 3 , colorneed
-       ,if(SaldTune.wobj <> 0, 0,ColorSysGray)
-       )
-     ,if(spFormPl.RESCOMP1[#nppkau] = 0h  and spFormPl.RESWORD1[#nppkau]= 3 , colorneed
-        ,if(SaldTune.WKAU[getkausaldtune(#nppkau)] <> 0,0, ColorSysGray)
-        )
-);}}
+{Font = {backcolor =if( isallNotCheck, colorerror
+                        ,if(#nppkau = 1
+                           ,if(spFormPl.RESCOMP1[#nppkau] = 0h  and spFormPl.RESWORD1[#nppkau] = 3 , colorneed
+                             ,if(SaldTune.wobj <> 0, 0,ColorSysGray)
+                             )
+                           ,if(spFormPl.RESCOMP1[#nppkau] = 0h  and spFormPl.RESWORD1[#nppkau]= 3 , colorneed
+                              ,if(SaldTune.WKAU[getkausaldtune(#nppkau)] <> 0,0, ColorSysGray)
+                              )
+                           )
+                      );
+        }
+}
 #end
 
 browse brspec;
@@ -101,6 +105,7 @@ browse brspec;
  table spFormPl;
  fields
   spFormPl.RESWORD2[1]  'Расположение','ЦУ'  :[7], [list 0 'Шапка', 1 'Спецификация'] , protect;
+  spFormPl.RESWORD2[2]  'Формирование','ордеров' : [7], [list 0 'Разрешать', 1 'Запрещать'], protect;
   Saldtune.name         'Объект','ЦУ'   :[7], Protect, pickbutton, {Font = {backcolor = if(spFormPl.RESCOMP2[1] = 0h, colorneed,0);}};
 //  spFormPl.RESWORD1[1]  'КАУ1','режим'  :[7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
     vKau1                 'КАУ1' ,'значение' :[7], Protect, pickbutton, #setbkcolor(1);
@@ -122,7 +127,6 @@ browse brspec;
     vKau9                 'КАУ9' ,'значение' :[7],  Protect, pickbutton, #setbkcolor(9);
 //  spFormPl.RESWORD1[10] 'КАУ10' : [7], [list 0 'Не проверять', 1 'Заполнен', 2 'Не заполнен', 3 'Конкретное значение'] , protect;
     vKau10                'КАУ10','значение' : [7], Protect, pickbutton, #setbkcolor(10);
-  spFormPl.RESWORD2[2]  'Формирование','ордеров' : [7], [list 0 'Запрещать', 1 'Разрешать'], protect;
 end;
 TableEvent table spFormPl;
 cmSetDefault: {

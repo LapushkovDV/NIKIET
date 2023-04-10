@@ -31,27 +31,52 @@ Var
 Create view
 Var
  nrecFormPl    : Comp;//Настройка алгоритма
+ _log : string;
 As Select
  FormPl.nrec
 From
    FormPl
  , SpFormPl
+ , SpFormPl spformpl_check
  , saldtune
-
+ , katsopr
+ , spsopr
+ , specmtr specmtr_head
+ , specmtr specmtr_spec
 Where
 ((
-               nrecFormPl == FormPl.NRec
-    and FormPl.RESCOMP[1] == saldtune.nrec
-          and FormPl.NRec == spFormPl.cFormPl
+                nrecFormPl == FormPl.NRec
+            and FormPl.NRec == spFormPl.cFormPl
+      and spFormPl.RESCOMP2[1] == saldtune.nrec
+
+               and FormPl.NRec == spformpl_check.cFormPl
+   //   and spformpl_check.RESCOMP2[1] == saldtune.nrec
+
+               and _cpNrec == katsopr.nrec
+                  and 1109 == specmtr_head.cotable
+          and katsopr.nrec == specmtr_head.cspec
+
+          and katsopr.nrec == spsopr.csopr
+                  and 1110 == specmtr_spec.cotable
+           and spsopr.nrec == specmtr_spec.cspec
+
 ))
 ;
+
+Procedure MyLog(_str: string);
+{
+  if FormPl.RESWORD[2] = 0 then exit; // в настройках алгоритма не указано логирование
+  if _log = '' then _log := GetStringParameter('Files','OutputFilesDirectory',0)+ '\Algoritm_checkallKAUdocs_'+DateToStr(cur_date,'YYYYMMDD')+'_'+timetostr(cur_time,'HHMMSS')+'.log';
+  LogStrToFile(_log,shortstrtowin(_str));
+}
+
 //-------------------------
 //Номер системного алгоритма
 Function GetNum: Word;
 { Result := 6103;
 } //Function GetNum: Word;
 
-
+#include Algoritm_checkKAU_functions.vpp
 //-------------------------
 Function GetName: String;
 { Result := 'Проверка всех КАУ ЦУ документа';
@@ -91,8 +116,154 @@ Function InitInter(Var pt: TRecAcc): Boolean;
   Result := True;
 } //Function InitInter(Var pt: TRecAcc): Boolean;
 
+function checkkau(_typeCondition: word; _cKauCondition, _cKauDoc : comp) : boolean;
+{
+  result := false;
+  case _typeCondition of
+   co_doNotCheckKau : result := true; // не проверять
+   co_FillKau       : {     // '< Заполнен >'
+                       if _cKauDoc <> 0h then result := true;
+                      } //
+   co_dontFillKau   : {// 2; '< Не заполнен >'
+                       if _cKauDoc = 0h then result := true;
+                      }
+   co_clearlyKAU    : { //= 3; //< Явно - '
+                       if _cKauCondition = _cKauDoc then result := true;
+                      }
+  end;
+}
+Function existsHeadTerms : boolean;
+{
+  result := false;
+  _loop spformpl_check
+    if spformpl_check.RESWORD2[1] = 0 // 0 - head, 1 - spec
+    {
+     result := True;
+     break;
+    }
+mylog('existsHeadTerms = ' + string(result));
+}
 
+Function existsSpecTerms : boolean;
+{
+  result := false;
+  _loop spformpl_check
+    if spformpl_check.RESWORD2[1] = 1 // 0 - head, 1 - spec
+    {
+     result := True;
+     break;
+    }
+mylog('existsSpecTerms = ' + string(result));
+}
 
+#declare checkkau(npp)
+      if saldtune.wkau[getkausaldtune(#npp)] <> 0 {
+        result := result and checkkau(spFormPl.RESWORD1[#npp],spFormPl.RESCOMP1[#npp],_specmtrbuf.ckau[getkausaldtune(#npp)]);
+      }
+     mylog(' checkkau[#npp] =' + string(result));
+     if not result then break;
+#end
+function existRelevantFilterConditions(_headSpec, _deniedAccept : word; _specmtrbuf : record as table SpecMTR) : boolean;
+{
+  mylog('existRelevantFilterConditions');
+  mylog(' _headSpec =' + _headSpec);
+  mylog(' _deniedAccept =' + _deniedAccept);
+
+  result := True;
+  _loop spformpl
+    if spFormPl.RESWORD2[1] = _HeadSPec // 0 - head, 1 - spec
+    if spFormPl.RESWORD2[2] = _deniedAccept // 0 - разрешать, 1- запрещать
+    if getfirst saldtune = tsOK  // строка условий содержит ЦУ
+    if _specmtrbuf.CSALDTUNE = saldtune.nrec {// ЦУ в настройке условий равен ЦУ проверяемому
+      if saldtune.wObj <> 0 {
+        result := result and checkkau(spFormPl.RESWORD1[1],spFormPl.RESCOMP1[1],_specmtrbuf.cObj);
+      }
+      mylog(' checkkau[1] =' + string(result));
+      if not result then break;
+      #checkkau(2)
+      #checkkau(3)
+      #checkkau(4)
+      #checkkau(5)
+      #checkkau(6)
+      #checkkau(7)
+      #checkkau(8)
+      #checkkau(9)
+      #checkkau(10)
+    }
+  mylog('end existRelevantFilterConditions');
+}
+
+Function docCheck: boolean;
+{
+  result := true;
+  var _isFoundDenied   : boolean = false;
+  var _isFoundAccepted : boolean = false;
+
+  if getfirst katsopr <> tsOK then exit;
+
+     if existsHeadTerms {//  а вот если нет условий на шапку, то и проверять не будем шапку
+         if getfirst specmtr_head <> tsOK { //не нашли ЦУ в шапке, а условия то есть....
+           mylog('getfirst specmtr_head <> tsOK');
+             _isFoundDenied := true;
+         }
+         else { //  есть к шапке ЦУ
+           if specmtr_head.CSALDTUNE = 0h {//  равносильно отсутствию записи specmtr
+             mylog('specmtr_head.CSALDTUNE = 0h');
+             _isFoundDenied := true;
+           }
+           else {
+             _isFoundDenied   := existRelevantFilterConditions(co_head, co_denied  , specmtr_head.buffer);
+             _isFoundAccepted := existRelevantFilterConditions(co_head, co_accepted, specmtr_head.buffer);
+              mylog('head _isFoundDenied = '+ string(_isFoundDenied));
+              mylog('head _isFoundAccepted = ' + string(_isFoundAccepted));
+           }
+         }
+        if   _isFoundDenied = true then {
+                                 result := false;
+                                 exit;
+                               }
+        if _isFoundAccepted = false
+           and FormPl.RESWORD[1] = co_denied //  стоит Запрещать формирование ордеров если в документе будет комбинации КАУ, не указанная ниже
+           then {
+              result := false;
+              exit;
+            }
+      }
+    mylog('checkhead = true');
+    result := true; // раз попали сюда, то шапка прошла по условиям
+
+   if not existsSpecTerms then exit; //вдруг не надо проверять спецификацию
+
+  _loop SpSopr {
+    mylog(' SpSopr.npp = '+ string(spsopr.npp));
+    if getfirst Specmtr_spec <> tsOK { // не нашли ЦУ, а условия на проверку есть....
+        mylog(' getfirst Specmtr_spec <> tsOK ');
+       _isFoundDenied := true;
+      }
+    if Specmtr_spec.CSALDTUNE = 0h {//  равносильно отсутствию записи specmtr
+        mylog(' Specmtr_spec.CSALDTUNE = 0h ');
+       _isFoundDenied := true;
+     }
+     else {
+       _isFoundDenied   := existRelevantFilterConditions(co_spec, co_denied  , specmtr_spec.buffer);
+       _isFoundAccepted := existRelevantFilterConditions(co_spec, co_accepted, specmtr_spec.buffer);
+        mylog(' _isFoundDenied = '+ string(_isFoundDenied));
+        mylog('_isFoundAccepted = ' + string(_isFoundAccepted));
+     }
+     // каждая позиция может прервать проверку
+     if   _isFoundDenied = true then { // ограничения имеют приоритет
+                              result := false;
+                              break;
+                            }
+     if _isFoundAccepted = false
+        and FormPl.RESWORD[1] = co_denied //  стоит Запрещать формирование ордеров если в документе будет комбинации КАУ, не указанная ниже
+        then {
+           result := false;
+           break;
+         }
+   }
+    mylog('checkhead = ' + string(result));
+}
 //Запуск алгоритма
 Function RunInter(wflag: Word; Var pt: TRecAcc): Boolean;
 { #__UNUSED__(wflag,pt)
@@ -110,6 +281,71 @@ Function RunInter(wflag: Word; Var pt: TRecAcc): Boolean;
   _TypeCpNrec := pt.TypeCpNrec;
   _cpNrec     := pt.cpNrec;
 
+  mylog('_TypeCpNrec = ' + _TypeCpNrec);
+  mylog('_cpNrec = ' + _cpNrec);
+  var _isDocToCheck : boolean = False; // по документу предусмотрена проверка
+case _typeCpNrec of
+   1101 : _isDocToCheck := False; // До снабжение
+   1201 : _isDocToCheck := False; // ДО сбыт
+   1501 : _isDocToCheck := False; //  ДО/ЛЗК на отпуск в производство
+   2101 : _isDocToCheck := True; // Приходная накладная 101
+   2111 : _isDocToCheck := True; // Акт на прием услуг
+   2201 : _isDocToCheck := True; // Накладная на отпуск 201
+   2211 : _isDocToCheck := True; // Акт на оказание услуг
+   2106 : _isDocToCheck := True; // Накладная на возврат товаров по рекламации в продаже
+   2626 : _isDocToCheck := False; // Акт на возврат оборудования и материалов
+   2501 : _isDocToCheck := True; // Накладная на отпуск в производство /склад-подразделение/ 501
+   2502 : _isDocToCheck := False; // Накладная на приход готовой продукции из производства /подразделение-склад/
+   2503 : _isDocToCheck := False; // Накладная на возврат сырья из производства /подразделение-склад/
+   2504 : _isDocToCheck := True; // Акт на списание МЦ из производства /подразделение-.../
+   2505 : _isDocToCheck := False; // Межцеховая накладная (полуфабрикат) /подразделение-подразделение/
+   2506 : _isDocToCheck := False; // Накладная на внутреннее перемещение в производстве (МЦ) /подразделение-подразделение/
+   2507 : _isDocToCheck := False; // Акт на брак
+   2508 : _isDocToCheck := False; // Акт на оказание услуг
+   2600 : _isDocToCheck := True; // Накладная на внутреннее перемещение - склад 600
+   2601 : _isDocToCheck := True; // Накладная на передачу МЦ в ОС        601
+   2602 : _isDocToCheck := True; // Накладная на передачу МЦ в спецоснастку        602
+   2650 : _isDocToCheck := False; // Инвентаризационная опись складского учета        615
+   2630 : _isDocToCheck := False; // Акт пересортицы - склад
+   2532 : _isDocToCheck := False; // Накладная на расход сырья /по накладной на приход готовой продукции из производства /
+    74  : _isDocToCheck := False; // СФ сбыт
+    75  : _isDocToCheck := False; // СФ поставщика
+    7   : _isDocToCheck := False; // договор
+    6   : _isDocToCheck := False; // Ссылка на Indent
+    8   : _isDocToCheck := False; // Ссылка на CalPlan
+    9   : _isDocToCheck := False; // Ссылка на OperPlan
+    10  : _isDocToCheck := False; // Ссылка на SklOrder
+    11  : _isDocToCheck := False; // Ссылка на RsvOper
+   3101 : _isDocToCheck := False; // на всякий
+   3111 : _isDocToCheck := False; // Сводный сопроводительный документ снабжение
+   3201 : _isDocToCheck := False; //сводная накладная
+   3211 : _isDocToCheck := False; // Сводный сопроводительный документ сбыт
+  end;
+  mylog('_isDocToCheck = ' + string(_isDocToCheck));
+  if not _isDocToCheck {
+     message('По данному типу документов ('+_typeCpNrec+') алгоритм не работает ', error);
+     mylog('По данному типу документов ('+_typeCpNrec+') алгоритм не работает ');
+     pt.Binding:=8;
+     result := false;
+     exit;
+  }
+
+  if getfirst katsopr <> tsOK {
+     message('Не найден документ по которому запускается алгоритм.'+
+          + ''#13''+ 'Переданный в алгоритм тип документа = '+_typeCpNrec+ ', NREC = ' + _cpNrec , error);
+     mylog('Не найден документ по которому запускается алгоритм.');
+     pt.Binding:=8;
+     result := false;
+     exit;
+  }
+
+  if not docCheck {
+     mylog('Документ не прошел проверку ЦУ согласно настройке алгоритма проверки');
+     message('Документ не прошел проверку ЦУ согласно настройке алгоритма проверки', error);
+     pt.Binding:=8;
+     result := false;
+     exit;
+  }
  result := True;
 } //Function RunInter(wflag: Word; Var pt: TRecAcc): Boolean;
 
